@@ -1,0 +1,25 @@
+language: python
+cache:
+  pip: true
+python:
+- 3.6
+dist: trusty
+before_install:
+- openssl aes-256-cbc -K $encrypted_54fa4eff22c7_key -iv $encrypted_54fa4eff22c7_iv
+  -in gcp-credentials.json.enc -out gcp-credentials.json -d
+install:
+- pip install -r requirements.txt
+script:
+- set -eo pipefail
+- make test
+after_success:
+- bash <(curl -s https://codecov.io/bash)
+env:
+  global:
+  - S3_BUCKET=cloud-blobstore-travis-test
+  - S3_BUCKET_FIXTURES=cloud-blobstore-travis-test-fixtures
+  - GS_BUCKET=czi-cloud-blobstore
+  - GS_BUCKET_FIXTURES=czi-cloud-blobstore-fixtures
+  - GOOGLE_APPLICATION_CREDENTIALS=gcp-credentials.json
+  - secure: fc6Qspz1gGVGd1r2qQ2FZhoLOSBGS3F35aplrSEjuUbZOTR3Gp9LOB5531yg+ZUs1jGAjMwtVGL8KmdH8VVtBXp12sVsnpTZ7BnlsQU3ixrqyEqpmORTQqlKrUMUItrcB0jf37QwtXzWPTXV28Z+LK5SQ/vBZ314s29FKelPeUNbIe9aWJDk1cC+XVrLtHkdoKao/eaYy9BtSOhrj36ieSd76p3hXp+ZRgXRt+0VZHjuC+gmqAtxGqoTTNqV5z3LV66Cq+gQl7+qTguz8+mExe44FbnAPMOn2+Tp9Abt2XjvcjBsuE/h2XG5lQVLqyYGZ/9XBftST/r/vl4kTybh+5BdW2oQ2GzwFUtpkz0+8qYyUJJjSBwBcKYVp8zaLpZVpX9kwtvDg8y5H/TuX0YLU6FE7zzELL8Halc0Rcsd4Wtip9NyjneF9PIwLthAITu5wxxN5NwqPIAx1jbRZX26/kqhi9aKuP5O76q9a+AEGIMxu1k75loyGUwbfK3iV/h2SwBjaDG+xybcuytWhcUvVUbV+1dVFAaheU2+vtFy+rh2ffsWU3clXERl54bG2KbWXjkQ/LHyusOKv4Gk58uKn4oPzZW5u7NFwgp2nXlMm8fgLMKoFYJ6oe0Uu3zq5Ot71lKwFW1F1HkCY/s5IG2HWmNIidD+2ewEm5buFw6vxmI=
+  - secure: bCTG648Nh7jp9RgjZi3DpvIgakG8kT7XCuSz7326mskdh3nD6fGEtEQnV1EUBJqhVl3rN1bH1k7ss/wJXIqbHVli8aYfWczVkPfnNH2rozwA5nDY4aX8Wo8AEvUu4V4ypuZnR52sNbY/NoipmB4VFtbKN5IRjkWo7/KSx3Jl2cILZBJy6lE1AB1BK6NZV4n+fV+QoFdGsf0aw0KJ3iHYAbarNSvGdzLBx4iE9th5uOuxieF1i8szKt+nT1u6R/sXfRf0dIuGpzKOSn4/8n7ykDjAhpGBDLYddFq2QQYJyhf6o8LCqbb4QSV2ll8yB3z6waamqvKgQwA96bBOIM81SkpNuGYUgKy9OoxPaqueExk5c3dDb8zmpMFNU9msABtyaiDV5q1zek5Min8lvmMVLB/5er5vmtv+MzFc4C6Q6qO72Yk+g50Kjagr7faVVDrL22VZSAwBtMJnRtG2X14aJUoUD7EBeuwDMI8ryC0aEBfS10yyewjUEMfTYodLTqKfEeXBTyt6S80sNaAUnptCNojuVqi91XqGZgPAEYMXLoOpZYVT/vCCmjF7zdTt9aCX1L4mvhXxigoHedmJO6hHMxJTPiJW/d1ZsUSZVDVqsfcCcNdDawMmshMNDV7ZEWQXOmRIv8IXwGdq+SVZtPWk10NbA+cpajgEDNOvOQiMSUw=
