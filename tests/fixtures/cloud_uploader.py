@@ -6,12 +6,24 @@ import boto3
 from boto3.s3.transfer import TransferConfig
 from google.cloud.storage import Client
 
-from dss.util.aws import get_s3_chunk_size
-from .checksumming_io.checksumming_io import ChecksummingSink
-
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+
+
+AWS_MIN_CHUNK_SIZE = 64 * 1024 * 1024
+"""Files must be larger than this before we consider multipart uploads."""
+AWS_MAX_MULTIPART_COUNT = 10000
+"""Maximum number of parts allowed in a multipart upload.  This is a limitation imposed by S3."""
+
+def get_s3_chunk_size(filesize: int) -> int:
+    if filesize <= AWS_MAX_MULTIPART_COUNT * AWS_MIN_CHUNK_SIZE:
+        return AWS_MIN_CHUNK_SIZE
+    else:
+        div = filesize // AWS_MAX_MULTIPART_COUNT
+        if div * AWS_MAX_MULTIPART_COUNT < filesize:
+            div += 1
+        return ((div + 1048575) // 1048576) * 1048576
 
 
 class Uploader:
@@ -29,30 +41,6 @@ class Uploader:
             *args,
             **kwargs) -> None:
         raise NotImplementedError()
-
-    def checksum_and_upload_file(
-            self,
-            local_path: str,
-            remote_path: str,
-            metadata: typing.Dict[str, str]=None,
-            *args,
-            **kwargs
-    ) -> None:
-        if metadata is None:
-            metadata = dict()
-
-        with ChecksummingSink() as sink, open(os.path.join(self.local_root, local_path), "rb") as fh:
-            data = fh.read()
-            sink.write(data)
-
-            sums = sink.get_checksums()
-
-        metadata['hca-dss-crc32c'] = sums['crc32c'].lower()
-        metadata['hca-dss-s3_etag'] = sums['s3_etag'].lower()
-        metadata['hca-dss-sha1'] = sums['sha1'].lower()
-        metadata['hca-dss-sha256'] = sums['sha256'].lower()
-
-        self.upload_file(local_path, remote_path, metadata, *args, **kwargs)  # noqa
 
 
 class S3Uploader(Uploader):
