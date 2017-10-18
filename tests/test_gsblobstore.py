@@ -8,8 +8,8 @@ import unittest
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from dss.blobstore.gs import GSBlobStore
-from dss.blobstore import BlobNotFoundError
+from cloud_blobstore import BlobNotFoundError
+from cloud_blobstore.gs import GSBlobStore
 from tests import infra
 from tests.test_blobstore import BlobStoreTests
 
@@ -17,8 +17,8 @@ from tests.test_blobstore import BlobStoreTests
 class TestGSBlobStore(unittest.TestCase, BlobStoreTests):
     def setUp(self):
         self.credentials = infra.get_env("GOOGLE_APPLICATION_CREDENTIALS")
-        self.test_bucket = infra.get_env("DSS_GS_BUCKET_TEST")
-        self.test_fixtures_bucket = infra.get_env("DSS_GS_BUCKET_TEST_FIXTURES")
+        self.test_bucket = infra.get_env("GS_BUCKET")
+        self.test_fixtures_bucket = infra.get_env("GS_BUCKET_FIXTURES")
         self.handle = GSBlobStore(self.credentials)
 
     def tearDown(self):

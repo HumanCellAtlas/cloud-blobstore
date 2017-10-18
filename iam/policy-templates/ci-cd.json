@@ -14,24 +14,7 @@
         "s3:RestoreObject"
       ],
       "Resource": [
-        "arn:aws:s3:::$DSS_S3_BUCKET/*",
-        "arn:aws:s3:::$DSS_S3_BUCKET_TEST/*",
-        "arn:aws:s3:::$DSS_S3_BUCKET_STAGING/*"
-      ]
-    },
-    {
-      "Sid": "hcaDssCiCdS3ConfigAccess",
-      "Effect": "Allow",
-      "Action": [
-        "s3:PutAccelerateConfiguration",
-        "s3:PutBucket*",
-        "s3:PutLifecycleConfiguration",
-        "s3:PutReplicationConfiguration"
-      ],
-      "Resource": [
-        "arn:aws:s3:::$DSS_S3_BUCKET",
-        "arn:aws:s3:::$DSS_S3_BUCKET_TEST",
-        "arn:aws:s3:::$DSS_S3_BUCKET_STAGING"
+        "arn:aws:s3:::$S3_BUCKET/*"
       ]
     },
     {
@@ -42,64 +25,11 @@
         "s3:List*"
       ],
       "Resource": [
-        "arn:aws:s3:::$DSS_S3_BUCKET",
-        "arn:aws:s3:::$DSS_S3_BUCKET/*",
-        "arn:aws:s3:::$DSS_S3_BUCKET_TEST",
-        "arn:aws:s3:::$DSS_S3_BUCKET_TEST/*",
-        "arn:aws:s3:::$DSS_S3_BUCKET_TEST_FIXTURES",
-        "arn:aws:s3:::$DSS_S3_BUCKET_TEST_FIXTURES/*",
-        "arn:aws:s3:::$DSS_S3_BUCKET_STAGING",
-        "arn:aws:s3:::$DSS_S3_BUCKET_STAGING/*"
+        "arn:aws:s3:::$S3_BUCKET",
+        "arn:aws:s3:::$S3_BUCKET/*",
+        "arn:aws:s3:::$S3_BUCKET_FIXTURES",
+        "arn:aws:s3:::$S3_BUCKET_FIXTURES/*"
       ]
-    },
-    {
-      "Sid": "hcaDssCiCdLambdaReadAccess",
-      "Action": [
-        "lambda:ListFunctions",
-        "lambda:ListTags",
-        "lambda:TagResource",
-        "apigateway:*"
-      ],
-      "Resource": "*",
-      "Effect": "Allow"
-    },
-    {
-      "Sid": "hcaDssCiCdIamListRolesAccess",
-      "Effect": "Allow",
-      "Action": [
-        "iam:ListRoles"
-      ],
-      "Resource": "arn:aws:iam::$account_id:role/"
-    },
-    {
-      "Sid": "hcaDssCiCdTestLogging",
-      "Effect": "Allow",
-      "Action": [
-        "logs:*"
-      ],
-      "Resource": [
-        "arn:aws:logs:*:$account_id:log-group:dss-*-$DSS_DEPLOYMENT_STAGE*",
-        "arn:aws:logs:*:$account_id:log-group:chained-aws-lambda-*",
-        "arn:aws:logs:*:$account_id:log-group:dss-test-logging*"
-      ]
-    },
-    {
-      "Sid": "hcaDssCiCdLambdaElasticsearchSNSAdminAccess",
-      "Action": [
-        "lambda:*",
-        "es:*",
-        "sns:*"
-      ],
-      "Resource": [
-        "arn:aws:lambda:*:$account_id:function:dss-*",
-        "arn:aws:lambda:*:$account_id:function:chained-aws-lambda-*",
-        "arn:aws:es:*:$account_id:domain/dss-index-dev",
-        "arn:aws:es:*:$account_id:domain/dss-index-dev/*",
-        "arn:aws:sns:*:$account_id:dss-*",
-        "arn:aws:sns:*:$account_id:chained-aws-lambda-*",
-        "arn:aws:sns:*:$account_id:domovoi-s3-bucket-events-*"
-      ],
-      "Effect": "Allow"
     }
   ]
 }

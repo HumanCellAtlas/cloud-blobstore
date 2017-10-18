@@ -2,7 +2,7 @@ import io
 
 import requests
 
-from dss.blobstore import BlobNotFoundError, BlobStore
+from cloud_blobstore import BlobNotFoundError, BlobStore
 from tests import infra
 
 

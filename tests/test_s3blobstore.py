@@ -9,16 +9,16 @@ import uuid
 pkg_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))  # noqa
 sys.path.insert(0, pkg_root)  # noqa
 
-from dss.blobstore import BlobNotFoundError
-from dss.blobstore.s3 import S3BlobStore
+from cloud_blobstore import BlobNotFoundError
+from cloud_blobstore.s3 import S3BlobStore
 from tests import infra
 from tests.test_blobstore import BlobStoreTests
 
 
 class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
     def setUp(self):
-        self.test_bucket = infra.get_env("DSS_S3_BUCKET_TEST")
-        self.test_fixtures_bucket = infra.get_env("DSS_S3_BUCKET_TEST_FIXTURES")
+        self.test_bucket = infra.get_env("S3_BUCKET")
+        self.test_fixtures_bucket = infra.get_env("S3_BUCKET_FIXTURES")
 
         self.handle = S3BlobStore()
 
