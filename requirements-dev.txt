@@ -1,4 +1,6 @@
 coverage
 flake8
 mypy
+setuptools
+wheel
 -r requirements.txt
