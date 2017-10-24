@@ -104,6 +104,10 @@ class BlobStoreTests:
                 "test_good_source_data_DOES_NOT_EXIST",
             )
 
+    def testGetSize(self):
+        sz = self.handle.get_size(self.test_fixtures_bucket, "test_good_source_data/0")
+        self.assertEqual(sz, 11358)
+
     def testCopy(self):
         dst_blob_name = infra.generate_test_key()
 
