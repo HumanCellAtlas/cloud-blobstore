@@ -120,6 +120,21 @@ class BlobStore:
             **kwargs):
         raise NotImplementedError()
 
+    def check_bucket_exists(self, bucket: str) -> bool:
+        """
+        Checks if bucket with specified name exists.
+        :param bucket: the bucket to be checked.
+        :return: true if specified bucket exists.
+        """
+        raise NotImplementedError()
+
+    def get_bucket_region(self, bucket) -> str:
+        """
+        Get region associated with a specified bucket name.
+        :param bucket: the bucket to be checked.
+        :return: region in which specified bucket resides.
+        """
+        raise NotImplementedError()
 
 class BlobStoreError(Exception):
     pass

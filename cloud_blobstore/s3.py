@@ -277,3 +277,30 @@ class S3BlobStore(BlobStore):
                 if parts_resp['IsTruncated'] and search_start == parts_resp['NextPartNumberMarker']:
                     # finished examining the results of this batch, move onto the next one
                     break
+
+    def check_bucket_exists(self, bucket: str) -> bool:
+        """
+        Checks if bucket with specified name exists.
+        :param bucket: the bucket to be checked.
+        :return: true if specified bucket exists.
+        """
+        exists = True
+        try:
+            self.s3_client.head_bucket(Bucket=bucket)
+        except botocore.exceptions.ClientError as e:
+            # If a client error is thrown, then check that it was a 404 error.
+            # If it was a 404 error, then the bucket does not exist.
+            error_code = int(e.response['Error']['Code'])
+            if error_code == 404:
+                exists = False
+        return exists
+
+    def get_bucket_region(self, bucket) -> str:
+        """
+        Get region associated with a specified bucket name.
+        :param bucket: the bucket to be checked.
+        :return: region, Note that underlying AWS API returns None for default US-East-1,
+        I'm replacing that with us-east-1.
+        """
+        region = self.s3_client.get_bucket_location(Bucket=bucket)["LocationConstraint"]
+        return 'us-east-1' if region is None else region
