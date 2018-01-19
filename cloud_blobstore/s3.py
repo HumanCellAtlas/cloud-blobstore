@@ -69,9 +69,13 @@ class S3PagedIter(PagedIter):
 
 
 class S3BlobStore(BlobStore):
-    def __init__(self) -> None:
+    def __init__(self, s3_client) -> None:
         super(S3BlobStore, self).__init__()
 
+        self.s3_client = s3_client
+
+    @classmethod
+    def from_environment(cls):
         # verify that the credentials are valid.
         try:
             boto3.client('sts').get_caller_identity()
@@ -79,7 +83,8 @@ class S3BlobStore(BlobStore):
             if e.response['Error']['Code'] == "InvalidClientTokenId":
                 raise BlobStoreCredentialError()
 
-        self.s3_client = boto3.client("s3")
+        s3_client = boto3.client("s3")
+        return cls(s3_client)
 
     def list(
             self,

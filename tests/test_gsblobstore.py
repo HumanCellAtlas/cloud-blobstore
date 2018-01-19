@@ -19,7 +19,7 @@ class TestGSBlobStore(unittest.TestCase, BlobStoreTests):
         self.credentials = infra.get_env("GOOGLE_APPLICATION_CREDENTIALS")
         self.test_bucket = infra.get_env("GS_BUCKET")
         self.test_fixtures_bucket = infra.get_env("GS_BUCKET_FIXTURES")
-        self.handle = GSBlobStore(self.credentials)
+        self.handle = GSBlobStore.from_auth_credentials(self.credentials)
 
     def tearDown(self):
         pass

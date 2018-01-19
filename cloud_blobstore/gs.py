@@ -53,11 +53,15 @@ class GSPagedIter(PagedIter):
 
 
 class GSBlobStore(BlobStore):
-    def __init__(self, json_keyfile: str) -> None:
+    def __init__(self, gcp_client) -> None:
         super(GSBlobStore, self).__init__()
 
-        self.gcp_client = Client.from_service_account_json(json_keyfile)
+        self.gcp_client = gcp_client
         self.bucket_map = dict()  # type: typing.MutableMapping[str, Bucket]
+
+    @classmethod
+    def from_auth_credentials(cls, json_keyfile_path: str) -> "GSBlobStore":
+        return cls(Client.from_service_account_json(json_keyfile_path))
 
     def _ensure_bucket_loaded(self, bucket: str):
         cached_bucket_obj = self.bucket_map.get(bucket, None)

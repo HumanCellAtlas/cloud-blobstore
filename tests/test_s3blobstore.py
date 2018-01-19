@@ -22,7 +22,7 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
         self.test_us_east_1_bucket = infra.get_env("S3_BUCKET_US_EAST_1")
         self.test_non_us_east_1_bucket = infra.get_env("S3_BUCKET_NON_US_EAST_1")
 
-        self.handle = S3BlobStore()
+        self.handle = S3BlobStore.from_environment()
 
     def tearDown(self):
         pass
