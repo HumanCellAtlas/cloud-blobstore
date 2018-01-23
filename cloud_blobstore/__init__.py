@@ -117,7 +117,9 @@ class BlobStore:
             self,
             bucket: str,
             key: str,
-            src_file_handle: typing.BinaryIO):
+            src_file_handle: typing.BinaryIO,
+            content_type: str=None,
+            metadata: dict=None):
         """
         Saves the contents of a file handle as the contents of an object in a bucket.
         """
