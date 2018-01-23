@@ -157,7 +157,7 @@ class S3BlobStore(BlobStore):
             src_file_handle: typing.BinaryIO,
             content_type: str=None,
             metadata: dict=None):
-        extra_args = {}
+        extra_args = {}  # type: typing.MutableMapping[str, typing.Any]
         if content_type is not None:
             extra_args['ContentType'] = content_type
         if metadata is not None:

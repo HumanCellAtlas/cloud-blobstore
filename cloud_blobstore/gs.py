@@ -129,7 +129,8 @@ class GSBlobStore(BlobStore):
         blob_obj = bucket_obj.blob(key, chunk_size=1 * 1024 * 1024)
         blob_obj.upload_from_file(src_file_handle, content_type=content_type)
         if metadata:
-            blob_obj.metadata(metadata)
+            blob_obj.metadata = metadata
+            blob_obj.patch()
 
     def delete(self, bucket: str, key: str):
         """
