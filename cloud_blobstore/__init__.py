@@ -249,6 +249,15 @@ class BlobStoreCredentialError(BlobStoreError):
     pass
 
 
+class BlobStoreTimeoutError(BlobStoreError):
+    """
+    BlobStoreTimeoutError wraps timeout errors from cloud providers.
+    For instance, boto3 provides `read_timeout` and `connect_timeout` configurations that may
+    lead to `ConnectTimeout` and `ReadTimeout` exceeptions.
+    """
+    pass
+
+
 class BlobBucketNotFoundError(BlobStoreError):
     pass
 

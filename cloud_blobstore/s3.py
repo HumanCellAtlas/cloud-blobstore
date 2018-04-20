@@ -5,13 +5,25 @@ import typing
 
 from boto3.s3.transfer import TransferConfig
 
+from botocore.vendored.requests.exceptions import ConnectTimeout, ReadTimeout
+
 from . import (
     BlobNotFoundError,
     BlobStore,
     BlobStoreCredentialError,
+    BlobStoreTimeoutError,
     BlobStoreUnknownError,
     PagedIter,
 )
+
+
+def CatchTimeouts(meth):
+    def wrapped(*args, **kwargs):
+        try:
+            return meth(*args, **kwargs)
+        except (ConnectTimeout, ReadTimeout) as ex:
+            raise BlobStoreTimeoutError(ex)
+    return wrapped
 
 
 class S3PagedIter(PagedIter):
@@ -150,6 +162,7 @@ class S3BlobStore(BlobStore):
             Params=args,
         )
 
+    @CatchTimeouts
     def upload_file_handle(
             self,
             bucket: str,
@@ -175,6 +188,7 @@ class S3BlobStore(BlobStore):
             Key=key
         )
 
+    @CatchTimeouts
     def get(self, bucket: str, key: str) -> bytes:
         """
         Retrieves the data for a given object in a given bucket.
@@ -194,6 +208,7 @@ class S3BlobStore(BlobStore):
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
 
+    @CatchTimeouts
     def get_all_metadata(
             self,
             bucket: str,
@@ -263,6 +278,7 @@ class S3BlobStore(BlobStore):
         # hilariously, the ETag is quoted.  Unclear why.
         return response['ETag'].strip("\"")
 
+    @CatchTimeouts
     def get_user_metadata(
             self,
             bucket: str,
@@ -295,6 +311,7 @@ class S3BlobStore(BlobStore):
                 raise BlobNotFoundError(ex)
             raise BlobStoreUnknownError(ex)
 
+    @CatchTimeouts
     def copy(
             self,
             src_bucket: str, src_key: str,
@@ -322,6 +339,7 @@ class S3BlobStore(BlobStore):
             if str(ex.response['Error']['Code']) == str(requests.codes.precondition_failed):
                 raise BlobNotFoundError(ex)
 
+    @CatchTimeouts
     def get_size(
             self,
             bucket: str,
