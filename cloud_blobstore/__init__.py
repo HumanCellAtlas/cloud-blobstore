@@ -237,6 +237,7 @@ class BlobStore:
         """
         raise NotImplementedError()
 
+
 class BlobStoreError(Exception):
     pass
 
@@ -268,6 +269,7 @@ class BlobNotFoundError(BlobStoreError):
 
 class BlobAlreadyExistsError(BlobStoreError):
     pass
+
 
 class BlobPagingError(BlobStoreError):
     pass
