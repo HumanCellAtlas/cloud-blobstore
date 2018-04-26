@@ -205,7 +205,7 @@ class S3BlobStore(BlobStore):
             return response['Body'].read()
         except botocore.exceptions.ClientError as ex:
             if ex.response['Error']['Code'] == "NoSuchKey":
-                raise BlobNotFoundError(ex)
+                raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}") from ex
             raise BlobStoreUnknownError(ex)
 
     @CatchTimeouts
@@ -228,7 +228,7 @@ class S3BlobStore(BlobStore):
         except botocore.exceptions.ClientError as ex:
             if str(ex.response['Error']['Code']) == \
                     str(requests.codes.not_found):
-                raise BlobNotFoundError(ex)
+                raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}") from ex
             raise BlobStoreUnknownError(ex)
 
     def get_content_type(
@@ -308,7 +308,7 @@ class S3BlobStore(BlobStore):
         except botocore.exceptions.ClientError as ex:
             if str(ex.response['Error']['Code']) == \
                     str(requests.codes.not_found):
-                raise BlobNotFoundError(ex)
+                raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}") from ex
             raise BlobStoreUnknownError(ex)
 
     @CatchTimeouts
@@ -337,7 +337,7 @@ class S3BlobStore(BlobStore):
             )
         except botocore.exceptions.ClientError as ex:
             if str(ex.response['Error']['Code']) == str(requests.codes.precondition_failed):
-                raise BlobNotFoundError(ex)
+                raise BlobNotFoundError(f"Could not find s3://{src_bucket}/{src_key}") from ex
 
     @CatchTimeouts
     def get_size(
@@ -357,7 +357,7 @@ class S3BlobStore(BlobStore):
             return size
         except botocore.exceptions.ClientError as ex:
             if str(ex.response['Error']['Code']) == str(requests.codes.not_found):
-                raise BlobNotFoundError(ex)
+                raise BlobNotFoundError(f"Could not find s3://{bucket}/{key}") from ex
             raise BlobStoreUnknownError(ex)
 
     def find_next_missing_parts(
