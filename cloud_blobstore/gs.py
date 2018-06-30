@@ -3,7 +3,6 @@ import binascii
 import datetime
 import typing
 
-from google.api_core.exceptions import NotFound
 from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
