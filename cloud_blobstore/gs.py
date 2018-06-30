@@ -3,6 +3,7 @@ import binascii
 import datetime
 import typing
 
+from google.api_core.exceptions import NotFound
 from google.cloud.exceptions import NotFound
 from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
@@ -169,11 +170,12 @@ class GSBlobStore(BlobStore):
         :return: the data
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
+        blob_obj = bucket_obj.blob(key)
 
-        return blob_obj.download_as_string()
+        try:
+            return blob_obj.download_as_string()
+        except NotFound:
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
 
     @CatchTimeouts
     def get_cloud_checksum(
