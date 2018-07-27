@@ -332,7 +332,7 @@ class S3BlobStore(BlobStore):
                 Key=dst_key,
                 ExtraArgs=kwargs,
                 Config=TransferConfig(
-                    multipart_threshold=64 * 1024 * 1024,
+                    multipart_threshold=(64 * 1024 * 1024) + 1,
                     multipart_chunksize=64 * 1024 * 1024,
                 ),
             )
