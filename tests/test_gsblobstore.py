@@ -4,7 +4,6 @@
 import io
 import os
 import sys
-import json
 import unittest
 
 import google.auth.transport.requests
@@ -67,6 +66,11 @@ class TestGSBlobStore(unittest.TestCase, BlobStoreTests):
                 io.BytesIO(os.urandom(1000))
             )
 
+    def test_get_blob_obj(self):
+        with self.assertRaises(BlobNotFoundError):
+            self.handle._get_blob_obj(self.test_fixtures_bucket,
+                                      "test_good_source_data_DOES_NOT_EXIST")
+
     def _get_handle_with_timeouts(self, connect_timeout=60, read_timeout=60):
         class Session(google.auth.transport.requests.AuthorizedSession):
             def request(self, *args, **kwargs):
@@ -79,6 +83,7 @@ class TestGSBlobStore(unittest.TestCase, BlobStoreTests):
         )
 
         return GSBlobStore(Client(_http=Session(credentials)))
+
 
 if __name__ == '__main__':
     unittest.main()

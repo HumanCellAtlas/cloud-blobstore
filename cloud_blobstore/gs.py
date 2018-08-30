@@ -8,7 +8,7 @@ from google.cloud.storage import Client
 from google.cloud.storage.bucket import Bucket
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
-from . import BlobNotFoundError, BlobStore, PagedIter, BlobStoreTimeoutError
+from . import BlobMetadataField, BlobNotFoundError, BlobStore, BlobStoreTimeoutError, PagedIter
 
 
 def CatchTimeouts(meth):
@@ -29,7 +29,7 @@ class GSPagedIter(PagedIter):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None
+            k_page_max: int=None,
     ) -> None:
         self.bucket_obj = bucket_obj
         self.start_after_key = start_after_key
@@ -58,7 +58,11 @@ class GSPagedIter(PagedIter):
         return resp
 
     def get_listing_from_response(self, resp):
-        return (b.name for b in resp)
+        return ((b.name, {
+            BlobMetadataField.CHECKSUM: GSBlobStore.compute_cloud_checksum(b),
+            BlobMetadataField.LAST_MODIFIED: b.updated,
+            BlobMetadataField.SIZE: b.size,
+        }) for b in resp)
 
     def get_next_token_from_response(self, resp):
         return resp.next_page_token
@@ -71,6 +75,10 @@ class GSBlobStore(BlobStore):
         self.gcp_client = gcp_client
         self.bucket_map = dict()  # type: typing.MutableMapping[str, Bucket]
 
+    @staticmethod
+    def compute_cloud_checksum(blob_obj):
+        return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
+
     @classmethod
     def from_auth_credentials(cls, json_keyfile_path: str) -> "GSBlobStore":
         return cls(Client.from_service_account_json(json_keyfile_path))
@@ -82,6 +90,14 @@ class GSBlobStore(BlobStore):
         bucket_obj = self.gcp_client.bucket(bucket)  # type: Bucket
         self.bucket_map[bucket] = bucket_obj
         return bucket_obj
+
+    def _get_blob_obj(self, bucket: str, key: str):
+        bucket_obj = self._ensure_bucket_loaded(bucket)
+        blob_obj = bucket_obj.get_blob(key)
+        if blob_obj is None:
+            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
+
+        return blob_obj
 
     @CatchTimeouts
     def list(
@@ -111,15 +127,15 @@ class GSBlobStore(BlobStore):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None
-    ) -> typing.Iterable[str]:
+            k_page_max: int=None,
+    ) -> typing.Iterable[typing.Tuple[str, dict]]:
         return GSPagedIter(
             self._ensure_bucket_loaded(bucket),
             prefix=prefix,
             delimiter=delimiter,
             start_after_key=start_after_key,
             token=token,
-            k_page_max=k_page_max
+            k_page_max=k_page_max,
         )
 
     @CatchTimeouts
@@ -128,8 +144,7 @@ class GSBlobStore(BlobStore):
             bucket: str,
             key: str,
             **kwargs) -> str:
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
+        blob_obj = self._get_blob_obj(bucket, key)
         return blob_obj.generate_signed_url(datetime.timedelta(days=1))
 
     @CatchTimeouts
@@ -154,10 +169,10 @@ class GSBlobStore(BlobStore):
         return value is treated as something was possibly deleted.
         """
         bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
+        try:
+            bucket_obj.delete_blob(key)
+        except NotFound:
             return False
-        blob_obj.delete()
 
     @CatchTimeouts
     def get(self, bucket: str, key: str) -> bytes:
@@ -188,12 +203,8 @@ class GSBlobStore(BlobStore):
         :param key: the key of the object for which checksum is being retrieved.
         :return: the cloud-provided checksum
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-
-        return binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower()
+        blob_obj = self._get_blob_obj(bucket, key)
+        return self.compute_cloud_checksum(blob_obj)
 
     @CatchTimeouts
     def get_content_type(
@@ -207,11 +218,7 @@ class GSBlobStore(BlobStore):
         :param key: the key of the object for which content-type is being retrieved.
         :return: the content-type
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-
+        blob_obj = self._get_blob_obj(bucket, key)
         return blob_obj.content_type
 
     @CatchTimeouts
@@ -230,12 +237,24 @@ class GSBlobStore(BlobStore):
         :param cloud_checksum: the expected cloud-provided checksum.
         :return: an opaque copy token
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        blob_obj = bucket_obj.get_blob(key)
-        if blob_obj is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
+        blob_obj = self._get_blob_obj(bucket, key)
         assert binascii.hexlify(base64.b64decode(blob_obj.crc32c)).decode("utf-8").lower() == cloud_checksum
         return blob_obj.generation
+
+    @CatchTimeouts
+    def get_last_modified_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime.datetime:
+        """
+        Retrieves last modified date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the last modified date is being retrieved.
+        :return: the last modified date
+        """
+        blob_obj = self._get_blob_obj(bucket, key)
+        return blob_obj.updated
 
     @CatchTimeouts
     def get_user_metadata(
@@ -251,11 +270,8 @@ class GSBlobStore(BlobStore):
         retrieved.
         :return: a dictionary mapping metadata keys to metadata values.
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        response = bucket_obj.get_blob(key)
-        if response is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-        return response.metadata
+        blob_obj = self._get_blob_obj(bucket, key)
+        return blob_obj.metadata
 
     @CatchTimeouts
     def get_size(
@@ -269,12 +285,8 @@ class GSBlobStore(BlobStore):
         :param key: the key of the object for which size is being retrieved.
         :return: integer equal to filesize in bytes
         """
-        bucket_obj = self._ensure_bucket_loaded(bucket)
-        response = bucket_obj.get_blob(key)
-        if response is None:
-            raise BlobNotFoundError(f"Could not find gs://{bucket}/{key}")
-        res = response.size
-        return res
+        blob_obj = self._get_blob_obj(bucket, key)
+        return blob_obj.size
 
     @CatchTimeouts
     def copy(

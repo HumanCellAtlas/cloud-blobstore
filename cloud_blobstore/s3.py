@@ -1,5 +1,6 @@
 import boto3
 import botocore
+from datetime import datetime
 import requests
 import typing
 
@@ -8,6 +9,7 @@ from boto3.s3.transfer import TransferConfig
 from botocore.vendored.requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import (
+    BlobMetadataField,
     BlobNotFoundError,
     BlobStore,
     BlobStoreCredentialError,
@@ -35,7 +37,7 @@ class S3PagedIter(PagedIter):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None
+            k_page_max: int=None,
     ) -> None:
         self.start_after_key = start_after_key
         self.token = token
@@ -70,7 +72,11 @@ class S3PagedIter(PagedIter):
         else:
             contents = list()
 
-        return (b['Key'] for b in contents)
+        return ((b['Key'], {
+            BlobMetadataField.CHECKSUM: S3BlobStore.compute_cloud_checksum(b),
+            BlobMetadataField.LAST_MODIFIED: b['LastModified'],
+            BlobMetadataField.SIZE: b['Size'],
+        }) for b in contents)
 
     def get_next_token_from_response(self, resp):
         if resp['IsTruncated']:
@@ -86,6 +92,11 @@ class S3BlobStore(BlobStore):
         super(S3BlobStore, self).__init__()
 
         self.s3_client = s3_client
+
+    @staticmethod
+    def compute_cloud_checksum(metadata):
+        # hilariously, the ETag is quoted. Unclear why.
+        return metadata['ETag'].strip("\"")
 
     @classmethod
     def from_environment(cls):
@@ -127,15 +138,15 @@ class S3BlobStore(BlobStore):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None
-    ) -> typing.Iterable[str]:
+            k_page_max: int=None,
+    ) -> typing.Iterable[typing.Tuple[str, dict]]:
         return S3PagedIter(
             bucket,
             prefix=prefix,
             delimiter=delimiter,
             start_after_key=start_after_key,
             token=token,
-            k_page_max=k_page_max
+            k_page_max=k_page_max,
         )
 
     def generate_presigned_GET_url(
@@ -276,8 +287,22 @@ class S3BlobStore(BlobStore):
         :return: the cloud-provided checksum
         """
         response = self.get_all_metadata(bucket, key)
-        # hilariously, the ETag is quoted.  Unclear why.
-        return response['ETag'].strip("\"")
+        return self.compute_cloud_checksum(response)
+
+    @CatchTimeouts
+    def get_last_modified_date(
+            self,
+            bucket: str,
+            key: str,
+    ) -> datetime:
+        """
+        Retrieves last modified date for a given key in a given bucket.
+        :param bucket: the bucket the object resides in.
+        :param key: the key of the object for which the last modified date is being retrieved.
+        :return: the last modified date
+        """
+        blob_obj = self.get_all_metadata(bucket, key)
+        return blob_obj['LastModified']
 
     @CatchTimeouts
     def get_user_metadata(
