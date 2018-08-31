@@ -70,8 +70,9 @@ class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
 
             while True:
                 try:
-                    self.start_after_key = next(listing)
-                    yield self.start_after_key
+                    item = next(listing)
+                    self.start_after_key = item[0]
+                    yield item
                 except StopIteration:
                     break
 

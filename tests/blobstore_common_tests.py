@@ -165,11 +165,13 @@ class BlobStoreTests:
             self.test_fixtures_bucket,
             "testList/prefix",
             token=blobiter.token,
-            start_after_key=items1[-1],
+            start_after_key=blobiter.start_after_key,
             k_page_max=page_size,
         )
 
-        items2 = [item for item in blobiter]
+        for blob in blobiter:
+            items2.append(blob)
+            self.assertEquals(blobiter.start_after_key, blob[0])
 
         self.assertEqual(len(items1) + len(items2), 10)
 
