@@ -229,7 +229,8 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
             )
 
     def test_multipart_parallel_upload(self):
-        data = os.urandom(7 * 1024 * 1024)
+        size = 7 * 1024 * 1024
+        data = os.urandom(size)
         metadata = {'something': "foolish"}
         part_size = 5 * 1024 * 1024
         with self.subTest("copy multiple parts"):
@@ -238,6 +239,7 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
                     self.test_bucket,
                     "fake_key",
                     fh,
+                    size,
                     part_size,
                     metadata=metadata,
                     content_type="application/octet-stream",
@@ -249,6 +251,7 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
                     self.test_bucket,
                     "fake_key",
                     fh,
+                    size,
                     part_size,
                 )
         part_size = 5 * 1024 * 1024
@@ -258,6 +261,7 @@ class TestS3BlobStore(unittest.TestCase, BlobStoreTests):
                     self.test_bucket,
                     "fake_key",
                     fh,
+                    size,
                     part_size,
                     parallelization_factor=1,
                 )

@@ -410,6 +410,7 @@ class S3BlobStore(BlobStore):
             bucket: str,
             key: str,
             src_file_handle: typing.BinaryIO,
+            size: int,
             part_size: int,
             content_type: str=None,
             metadata: dict=None,
@@ -425,7 +426,6 @@ class S3BlobStore(BlobStore):
             kwargs['Metadata'] = metadata
         mpu = self.s3_client.create_multipart_upload(Bucket=bucket, Key=key, **kwargs)
 
-        size = src_file_handle.getbuffer().nbytes
         part_count = size // part_size
         if part_count * part_size < size:
             part_count += 1
