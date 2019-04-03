@@ -419,7 +419,7 @@ class S3BlobStore(BlobStore):
         Upload a file object in parallel.
         :param bucket:
         """
-        kwargs = dict()
+        kwargs: dict = dict()
         if content_type is not None:
             kwargs['ContentType'] = content_type
         if metadata is not None:
