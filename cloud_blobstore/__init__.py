@@ -24,64 +24,36 @@ class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
     iteration with token and key (start_after_key).
     """
 
-    def get_api_response(self, next_token):
+    def get_page(self, next_token):
         """
-        Make blobstore-specific list api request.
-        """
-        raise NotImplementedError()
-
-    def get_listing_from_response(self, resp) -> typing.Iterable[typing.Tuple[str, dict]]:
-        """
-        Retrieve blob metadata objects from blobstore response.
-        Metadata objects represented as tuples in the form of:
-        (key, {BlobMetadataField: val, ...})
-        """
-        raise NotImplementedError()
-
-    def get_next_token_from_response(self, resp) -> str:
-        """
-        Retrieve opaque continuation token from blobstore response.
+        Make blobstore-specific request for the next page of results.
         """
         raise NotImplementedError()
 
     def __iter__(self):
         """
-        Iterate over the blobs, saving page tokens and blob key start_after_keys as needed in order to continue
-        listing where one left off.
+        Iterate over objects, saving page tokens and start_after_keys as needed for continuation.
 
-        If start_after_key is not None, iteration will begin on the next key if start_after_key is found on the
-        first page of results. If it is not found on the first page of results, BlobPagingError will be raised.
+        If `start_after_key` is passed in, iteration begins on the next key. If `start_after_key` is not
+        found on the first page of results, `BlobPagingError` is raised.
         """
-        next_token = self.token
-
         while True:
-            self.token = next_token
-
-            resp = self.get_api_response(next_token)
-            listing = self.get_listing_from_response(resp)
-
+            prev_token = self.token
+            listing = self.get_page()
             if self.start_after_key:
                 while True:
                     try:
                         item = next(listing)
                     except StopIteration:
+                        self.token = prev_token
                         raise BlobPagingError('Marker not found in this page')
                     if item[0] == self.start_after_key:
                         break
-
-            while True:
-                try:
-                    item = next(listing)
-                    self.start_after_key = item[0]
-                    yield item
-                except StopIteration:
-                    break
-
+            for item in listing:
+                self.start_after_key = item[0]
+                yield item
             self.start_after_key = None
-
-            next_token = self.get_next_token_from_response(resp)
-
-            if not next_token:
+            if not self.token:
                 break
 
 

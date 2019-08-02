@@ -121,7 +121,7 @@ class BlobStoreTests:
         items = list(self.handle.list_v2(
             self.test_fixtures_bucket,
             "testList/prefix",
-            k_page_max=3
+            keys_per_page=3
         ))
         self.assertEqual(len(items), 10)
 
@@ -148,7 +148,7 @@ class BlobStoreTests:
         blobiter = self.handle.list_v2(
             self.test_fixtures_bucket,
             "testList/prefix",
-            k_page_max=page_size,
+            keys_per_page=page_size,
         )
 
         items1 = list()
@@ -166,7 +166,7 @@ class BlobStoreTests:
             "testList/prefix",
             token=blobiter.token,
             start_after_key=blobiter.start_after_key,
-            k_page_max=page_size,
+            keys_per_page=page_size,
         )
 
         for blob in blobiter:

@@ -38,55 +38,34 @@ class S3PagedIter(PagedIter):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None,
+            keys_per_page: int=None,
     ) -> None:
         self.start_after_key = start_after_key
-        self.token = token
-
         self.kwargs = dict()  # type: dict
-
+        self.token = token
         self.kwargs['Bucket'] = bucket
-
         if prefix is not None:
             self.kwargs['Prefix'] = prefix
-
         if delimiter is not None:
             self.kwargs['Delimiter'] = delimiter
-
-        if k_page_max is not None:
-            self.kwargs['MaxKeys'] = k_page_max
+        if keys_per_page is not None:
+            self.kwargs['MaxKeys'] = keys_per_page
 
     @CatchTimeouts
-    def get_api_response(self, next_token):
+    def get_page(self):
         kwargs = self.kwargs.copy()
-
-        if next_token is not None:
-            kwargs['ContinuationToken'] = next_token
-
+        if self.token is not None:
+            kwargs['ContinuationToken'] = self.token
         resp = boto3.client('s3').list_objects_v2(**kwargs)
-
-        return resp
-
-    def get_listing_from_response(self, resp):
-        if resp.get('Contents', None):
-            contents = resp['Contents']
-        else:
-            contents = list()
-
-        return ((b['Key'], {
-            BlobMetadataField.CHECKSUM: S3BlobStore.compute_cloud_checksum(b),
-            BlobMetadataField.CREATED: b['LastModified'],
-            BlobMetadataField.LAST_MODIFIED: b['LastModified'],
-            BlobMetadataField.SIZE: b['Size'],
-        }) for b in contents)
-
-    def get_next_token_from_response(self, resp):
         if resp['IsTruncated']:
-            token = resp['NextContinuationToken']
+            self.token = resp['NextContinuationToken']
         else:
-            token = None
-
-        return token
+            self.token = None
+        for item in resp.get('Contents', list()):
+            yield item['Key'], {BlobMetadataField.CHECKSUM: S3BlobStore.compute_cloud_checksum(item),
+                                BlobMetadataField.CREATED: item['LastModified'],
+                                BlobMetadataField.LAST_MODIFIED: item['LastModified'],
+                                BlobMetadataField.SIZE: item['Size']}
 
 
 class S3BlobStore(BlobStore):
@@ -140,7 +119,7 @@ class S3BlobStore(BlobStore):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None,
+            keys_per_page: int=None,
     ) -> typing.Iterable[typing.Tuple[str, dict]]:
         return S3PagedIter(
             bucket,
@@ -148,7 +127,7 @@ class S3BlobStore(BlobStore):
             delimiter=delimiter,
             start_after_key=start_after_key,
             token=token,
-            k_page_max=k_page_max,
+            keys_per_page=keys_per_page,
         )
 
     def generate_presigned_GET_url(

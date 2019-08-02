@@ -29,44 +29,31 @@ class GSPagedIter(PagedIter):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None,
+            keys_per_page: int=None,
     ) -> None:
         self.bucket_obj = bucket_obj
         self.start_after_key = start_after_key
         self.token = token
-
         self.kwargs = dict()  # type: dict
-
         if prefix is not None:
             self.kwargs['prefix'] = prefix
-
         if delimiter is not None:
             self.kwargs['delimiter'] = delimiter
-
-        if k_page_max is not None:
-            self.kwargs['max_results'] = k_page_max
+        if keys_per_page is not None:
+            self.kwargs['max_results'] = keys_per_page
 
     @CatchTimeouts
-    def get_api_response(self, next_token=None):
+    def get_page(self):
         kwargs = self.kwargs.copy()
-
-        if next_token is not None:
-            kwargs['page_token'] = next_token
-
+        if self.token is not None:
+            kwargs['page_token'] = self.token
         resp = self.bucket_obj.list_blobs(**kwargs)
-
-        return resp
-
-    def get_listing_from_response(self, resp):
-        return ((b.name, {
-            BlobMetadataField.CHECKSUM: GSBlobStore.compute_cloud_checksum(b),
-            BlobMetadataField.CREATED: b.time_created,
-            BlobMetadataField.LAST_MODIFIED: b.updated,
-            BlobMetadataField.SIZE: b.size,
-        }) for b in resp)
-
-    def get_next_token_from_response(self, resp):
-        return resp.next_page_token
+        for item in resp:
+            yield item.name, {BlobMetadataField.CHECKSUM: GSBlobStore.compute_cloud_checksum(item),
+                              BlobMetadataField.CREATED: item.time_created,
+                              BlobMetadataField.LAST_MODIFIED: item.updated,
+                              BlobMetadataField.SIZE: item.size}
+            self.token = resp.next_page_token
 
 
 class GSBlobStore(BlobStore):
@@ -128,7 +115,7 @@ class GSBlobStore(BlobStore):
             delimiter: str=None,
             start_after_key: str=None,
             token: str=None,
-            k_page_max: int=None,
+            keys_per_page: int=None,
     ) -> typing.Iterable[typing.Tuple[str, dict]]:
         return GSPagedIter(
             self._ensure_bucket_loaded(bucket),
@@ -136,7 +123,7 @@ class GSBlobStore(BlobStore):
             delimiter=delimiter,
             start_after_key=start_after_key,
             token=token,
-            k_page_max=k_page_max,
+            keys_per_page=keys_per_page,
         )
 
     @CatchTimeouts
