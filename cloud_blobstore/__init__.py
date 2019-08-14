@@ -55,11 +55,9 @@ class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
         next_token = self.token
 
         while True:
-            self.token = next_token
-
             resp = self.get_api_response(next_token)
             listing = self.get_listing_from_response(resp)
-
+            self.token = self.get_next_token_from_response(resp)
             if self.start_after_key:
                 while True:
                     try:
@@ -83,7 +81,6 @@ class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
 
             if not next_token:
                 break
-
 
 class BlobStore:
     """Abstract base class for all blob stores."""
