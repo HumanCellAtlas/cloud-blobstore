@@ -57,7 +57,7 @@ class PagedIter(typing.Iterable[typing.Tuple[str, dict]]):
         while True:
             resp = self.get_api_response(next_token)
             listing = self.get_listing_from_response(resp)
-            self.token = self.get_next_token_from_response(resp)
+            self.token = next_token
             if self.start_after_key:
                 while True:
                     try:
