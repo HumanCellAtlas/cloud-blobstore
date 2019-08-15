@@ -5,7 +5,7 @@ python:
 - 3.6
 dist: trusty
 before_install:
-- openssl aes-256-cbc -K $encrypted_54fa4eff22c7_key -iv $encrypted_54fa4eff22c7_iv
+- openssl aes-256-cbc -K $encrypted_7f3885ebfb38_key -iv $encrypted_7f3885ebfb38_iv
   -in gcp-credentials.json.enc -out gcp-credentials.json -d
 install:
 - pip install -r requirements-dev.txt
@@ -16,12 +16,10 @@ after_success:
 - bash <(curl -s https://codecov.io/bash)
 env:
   global:
-  - S3_BUCKET=cloud-blobstore-travis-test
-  - S3_BUCKET_US_EAST_1=cloud-blobstore-travis-test
-  - S3_BUCKET_NON_US_EAST_1=cloud-blobstore-travis-test-us-west-1
-  - S3_BUCKET_FIXTURES=cloud-blobstore-travis-test-fixtures
-  - GS_BUCKET=czi-cloud-blobstore
-  - GS_BUCKET_FIXTURES=czi-cloud-blobstore-fixtures
+  - S3_BUCKET=hca-cloud-blobstore-travis-test
+  - S3_BUCKET_US_EAST_1=hca-cloud-blobstore-travis-test
+  - S3_BUCKET_NON_US_EAST_1=hca-cloud-blobstore-travis-test-us-west-1
+  - S3_BUCKET_FIXTURES=hca-cloud-blobstore-travis-test-fixtures
+  - GS_BUCKET=hca-cloud-blobstore-travis-test
+  - GS_BUCKET_FIXTURES=hca-cloud-blobstore-travis-test-fixtures
   - GOOGLE_APPLICATION_CREDENTIALS=gcp-credentials.json
-  - secure: kOvidj8b2jn2kaQl43kshf8fucPen/qm46b81LwRRc5QpZlhjq8CZGyYH72XP6DnIvG3Ex7x/N9Z8Fn7QYNl6NcTgsVP6tWfV96WaQgI9XsytoAuYukdDIdNvFiO9JMR/3Yugob0TiySPmIMl+GOp0qVjcn8U8S6a6CNCkVz8Lew2VKghclCQwHUAXqLJJfeZBpyElKDrDpDixQgIcuQg6fnHeBpfDLkMYcDFH3yYTSHhTp+Y9ujJfJ4ESIrVtY3rAPE241coxbmD3EYRmeXCBlzudWO6tTkf4YZ6YVdLR1zS42Ki3zc5EXxJEo6XjNqVaXyyvLnEa83Hr9p0YV3gDMsIGLjz/rWuxURdS8bWJbgNLnBPy7hP9UIxN+cnfAH2mdBE6/v2LkKhTKOX/VGJvhAPrTaAXg+qfVDjPzemabG01DRwC+uCMPAqu/0s/Ql/Oim8etv2WZejYPaTX+43I8SiV8pEKS/BsYu6bkvC9hGrPbe9OOO2UYO2UyUn2v51EQxeQ9uYYoFWp5il8kIUTOyhEnJfTq/W564C8b8M7KiY4qAa+PQpcB6ZU+qy/AsdezKr81WZuZRUEwOVaCh/Vhm6QmzCmbVjyf8kdI59CViFpKZlJv2iW8yKBzM0g5lqjpZsz0O5jG5lMOkuqCW/6QRZv5J2BkhR+aT7w3yrJw=
-  - secure: QVEfo5rnr7ai6VuFulkKJINrZpZl9WngkhpH9MUNLAP+5Y4XAUgrfkg31AA2+zzhMJaey2lJEcXiNWs6DM2YZEiCiGqUmjX7zQMWSK0xdFhJu3aWKnvU3+89Qt8YYKNYM8dGRpleT8h0xYvlDkcymIC1T3p7wNuTZAtXwJqgsa7i/xfvstjLToQyW+kFqiGtb4SGlD/tHKl1YnEqwnaQ5btskZnEpGvKOwOWEmOunRLe8+dxJ5C5OnakLfFI22YNBkClAi3egyXIUpXj8yeOUb7Xz4PsYl+zxG9XNAqNkSvs/BEG+F27RpL54qqCud7X3OAwe7XSsVTlEHC6N+dfoLL73rQrOingJpxOz/oLEEy2hfs/XGmqCsjAmzLbgQmuJFNuCnggeOCZnuXIQdckXPtSO9TuT5yRq5+w6Fp9+4Et5+Lq+QyeWwC/2SPS5W0UvZ1BArSYHhkEw5vHlMrNbN+BDtiAqeoD4JgJZTFobdwxyJxsHtjofEE18YmA/S8y2KLcYpYC0tq64m8NUO0unhvhESHDhe617ls1UgtxBw+yRjAFbONvEuLG5hcmiRs9+vLdV7/785o5p+CHskHj1oUx/gA6xx6gleXo1MTRYrnomg5ionR/ItRMN1o2dpTtipieOCUoL+hrFI6uDidJcUkjA2qHfNVl4hpLBD/ruWM=
