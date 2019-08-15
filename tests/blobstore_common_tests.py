@@ -189,7 +189,7 @@ class BlobStoreTests:
             "testList/prefix",
             k_page_max=1,
         )
-        stop_length = len([x for x in  blobiter])
+        stop_length = len([x for x in blobiter])
 
         blobiter = self.handle.list_v2(
             self.test_fixtures_bucket,
@@ -197,7 +197,7 @@ class BlobStoreTests:
             k_page_max=1,
         )
         for idx, _ in enumerate(blobiter):
-            if idx >= stop_length-1:
+            if idx >= stop_length - 1:
                 self.assertTrue(blobiter.token)
 
     def testGetPresignedUrl(self):
