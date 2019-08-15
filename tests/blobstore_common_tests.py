@@ -141,6 +141,8 @@ class BlobStoreTests:
         self.assertEqual(len(items), 1)
 
     def testListV2Continuation(self):
+        self._testListV2Continuation(2, 1)
+        self._testListV2Continuation(2, 2)
         self._testListV2Continuation(2, 3)
         self._testListV2Continuation(2, 4)
 
