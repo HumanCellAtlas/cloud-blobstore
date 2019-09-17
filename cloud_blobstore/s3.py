@@ -155,11 +155,17 @@ class S3BlobStore(BlobStore):
             self,
             bucket: str,
             key: str,
+            response_content_disposition: str = None,
             **kwargs) -> str:
+
+        if response_content_disposition:
+            kwargs['ResponseContentDisposition'] = response_content_disposition
+
         return self._generate_presigned_url(
             bucket,
             key,
-            "get_object"
+            "get_object",
+            **kwargs
         )
 
     def _generate_presigned_url(
